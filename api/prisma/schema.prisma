@@ -114,4 +114,5 @@ model Appointment {
   date        DateTime
   status      String   @default("pending") // pending, accepted, rejected, completed
   createdAt   DateTime @default(now())
+  notes       String?
 }

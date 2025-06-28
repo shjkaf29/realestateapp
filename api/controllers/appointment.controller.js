@@ -2,7 +2,7 @@
 import prisma from "../lib/prisma.js";
 
 export const bookAppointment = async (req, res) => {
-  const { agentId, date } = req.body;
+  const { agentId, date, notes } = req.body;
   const customerId = req.user.id; // assuming you have auth middleware
 
   try {
@@ -11,6 +11,7 @@ export const bookAppointment = async (req, res) => {
         customerId,
         agentId,
         date: new Date(date),
+        notes,
       },
     });
     res.status(201).json(appointment);
