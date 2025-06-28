@@ -1,26 +1,60 @@
-import prisma from "../lib/prisma.js";
 import jwt from "jsonwebtoken";
+import prisma from "../lib/prisma.js";
 
 export const getPosts = async (req, res) => {
   const query = req.query;
 
   try {
-    const posts = await prisma.post.findMany({
-      where: {
-        city: query.city || undefined,
-        type: query.type || undefined,
-        property: query.property || undefined,
-        bedroom: parseInt(query.bedroom) || undefined,
-        price: {
-          gte: parseInt(query.minPrice) || undefined,
-          lte: parseInt(query.maxPrice) || undefined,
+    let posts = [];
+    // If city is provided, search for city (case-insensitive, partial match)
+    if (query.city) {
+      posts = await prisma.post.findMany({
+        where: {
+          city: { contains: query.city, mode: "insensitive" },
+          ...(query.type && { type: query.type }),
+          ...(query.property && { property: query.property }),
+          ...(query.bedroom && { bedroom: parseInt(query.bedroom) }),
+          ...((query.minPrice || query.maxPrice) && {
+            price: {
+              ...(query.minPrice && { gte: parseInt(query.minPrice) }),
+              ...(query.maxPrice && { lte: parseInt(query.maxPrice) }),
+            },
+          }),
         },
-      },
-    });
-
-    // setTimeout(() => {
-    res.status(200).json(posts);
-    // }, 3000);
+      });
+      // If no posts found for city, fallback to all posts (or you can return empty array if you don't want fallback)
+      if (posts.length === 0) {
+        posts = await prisma.post.findMany({
+          where: {
+            ...(query.type && { type: query.type }),
+            ...(query.property && { property: query.property }),
+            ...(query.bedroom && { bedroom: parseInt(query.bedroom) }),
+            ...((query.minPrice || query.maxPrice) && {
+              price: {
+                ...(query.minPrice && { gte: parseInt(query.minPrice) }),
+                ...(query.maxPrice && { lte: parseInt(query.maxPrice) }),
+              },
+            }),
+          },
+        });
+      }
+    } else {
+      // No city filter, just use other filters
+      posts = await prisma.post.findMany({
+        where: {
+          ...(query.type && { type: query.type }),
+          ...(query.property && { property: query.property }),
+          ...(query.bedroom && { bedroom: parseInt(query.bedroom) }),
+          ...((query.minPrice || query.maxPrice) && {
+            price: {
+              ...(query.minPrice && { gte: parseInt(query.minPrice) }),
+              ...(query.maxPrice && { lte: parseInt(query.maxPrice) }),
+            },
+          }),
+        },
+      });
+    }
+    res.status(200).json(Array.isArray(posts) ? posts : []);
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Failed to get posts" });

@@ -1,7 +1,9 @@
-import { useContext, useState } from "react";
 import "./navbar.scss";
-import { Link } from "react-router-dom";
+
+import { useContext, useState } from "react";
+
 import { AuthContext } from "../../context/AuthContext";
+import { Link } from "react-router-dom";
 import { useNotificationStore } from "../../lib/notificationStore";
 
 function Navbar() {
@@ -22,8 +24,7 @@ function Navbar() {
           <span>LamaEstate</span>
         </a>
         <a href="/">Home</a>
-        <a href="/">About</a>
-        <a href="/">Contact</a>
+        <Link to="/about">About</Link>
         <a href="/">Agents</a>
       </div>
       <div className="right">
@@ -53,8 +54,7 @@ function Navbar() {
         </div>
         <div className={open ? "menu active" : "menu"}>
           <a href="/">Home</a>
-          <a href="/">About</a>
-          <a href="/">Contact</a>
+          <Link to="/about">About</Link>
           <a href="/">Agents</a>
           <a href="/">Sign in</a>
           <a href="/">Sign up</a>

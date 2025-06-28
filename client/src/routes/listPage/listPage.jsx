@@ -1,8 +1,10 @@
 import "./listPage.scss";
-import Filter from "../../components/filter/Filter";
-import Card from "../../components/card/Card";
-import Map from "../../components/map/Map";
+
 import { Await, useLoaderData } from "react-router-dom";
+
+import Card from "../../components/card/Card";
+import Filter from "../../components/filter/Filter";
+import Map from "../../components/map/Map";
 import { Suspense } from "react";
 
 function ListPage() {
@@ -18,11 +20,17 @@ function ListPage() {
               resolve={data.postResponse}
               errorElement={<p>Error loading posts!</p>}
             >
-              {(postResponse) =>
-                postResponse.data.map((post) => (
+              {(postResponse) => {
+                if (!postResponse || !Array.isArray(postResponse.data)) {
+                  return <p>Error loading posts!</p>;
+                }
+                if (postResponse.data.length === 0) {
+                  return <p>No results found for your search.</p>;
+                }
+                return postResponse.data.map((post) => (
                   <Card key={post.id} item={post} />
-                ))
-              }
+                ));
+              }}
             </Await>
           </Suspense>
         </div>
@@ -33,7 +41,7 @@ function ListPage() {
             resolve={data.postResponse}
             errorElement={<p>Error loading posts!</p>}
           >
-            {(postResponse) => <Map items={postResponse.data} />}
+            {(postResponse) => <Map items={Array.isArray(postResponse.data) ? postResponse.data : []} />}
           </Await>
         </Suspense>
       </div>
