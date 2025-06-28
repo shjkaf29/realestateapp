@@ -72,3 +72,16 @@ export const getUserAppointments = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch appointments" });
   }
 };
+
+export const cancelAppointment = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const appointment = await prisma.appointment.update({
+      where: { id },
+      data: { status: "rejected" },
+    });
+    res.json(appointment);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to cancel appointment" });
+  }
+};
