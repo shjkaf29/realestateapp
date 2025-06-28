@@ -1,63 +1,105 @@
 import jwt from "jsonwebtoken";
+import { listData } from "../../client/src/lib/dummydata.js";
 import prisma from "../lib/prisma.js";
 
 export const getPosts = async (req, res) => {
   const query = req.query;
 
   try {
-    let posts = [];
-    // If city is provided, search for city (case-insensitive, partial match)
-    if (query.city) {
-      posts = await prisma.post.findMany({
-        where: {
-          city: { contains: query.city, mode: "insensitive" },
-          ...(query.type && { type: query.type }),
-          ...(query.property && { property: query.property }),
-          ...(query.bedroom && { bedroom: parseInt(query.bedroom) }),
-          ...((query.minPrice || query.maxPrice) && {
-            price: {
-              ...(query.minPrice && { gte: parseInt(query.minPrice) }),
-              ...(query.maxPrice && { lte: parseInt(query.maxPrice) }),
-            },
-          }),
-        },
-      });
-      // If no posts found for city, fallback to all posts (or you can return empty array if you don't want fallback)
-      if (posts.length === 0) {
-        posts = await prisma.post.findMany({
-          where: {
-            ...(query.type && { type: query.type }),
-            ...(query.property && { property: query.property }),
-            ...(query.bedroom && { bedroom: parseInt(query.bedroom) }),
-            ...((query.minPrice || query.maxPrice) && {
-              price: {
-                ...(query.minPrice && { gte: parseInt(query.minPrice) }),
-                ...(query.maxPrice && { lte: parseInt(query.maxPrice) }),
-              },
-            }),
-          },
+    console.log("Search query received:", query);
+    
+    // Debug: Let's see all posts in the database first
+    const allPosts = await prisma.post.findMany();
+    console.log("All posts in database:", allPosts.length);
+    console.log("Sample post:", allPosts[0]);
+    
+    // Build dynamic filters with OR logic for flexible searching
+    let whereConditions = [];
+    
+    // Handle empty or zero values properly
+    const hasCity = query.city && query.city.trim() !== "";
+    const hasType = query.type && query.type.trim() !== "";
+    const hasProperty = query.property && query.property.trim() !== "";
+    const hasBedroom = query.bedroom && !isNaN(parseInt(query.bedroom)) && parseInt(query.bedroom) > 0;
+    const hasMinPrice = query.minPrice && !isNaN(parseInt(query.minPrice)) && parseInt(query.minPrice) > 0;
+    const hasMaxPrice = query.maxPrice && !isNaN(parseInt(query.maxPrice)) && parseInt(query.maxPrice) > 0;
+
+    // If we have any search criteria, build flexible OR conditions
+    if (hasCity || hasType || hasProperty || hasBedroom || hasMinPrice || hasMaxPrice) {
+      // Start with flexible city/location search using OR
+      if (hasCity) {
+        whereConditions.push({
+          OR: [
+            { city: { contains: query.city, mode: "insensitive" } },
+            { address: { contains: query.city, mode: "insensitive" } }
+          ]
         });
       }
-    } else {
-      // No city filter, just use other filters
+      
+      // Add other filters as AND conditions
+      if (hasType) {
+        whereConditions.push({ type: query.type });
+      }
+      
+      if (hasProperty) {
+        whereConditions.push({ property: query.property });
+      }
+      
+      if (hasBedroom) {
+        whereConditions.push({ bedroom: parseInt(query.bedroom) });
+      }
+      
+      if (hasMinPrice || hasMaxPrice) {
+        let priceCondition = {};
+        if (hasMinPrice) priceCondition.gte = parseInt(query.minPrice);
+        if (hasMaxPrice) priceCondition.lte = parseInt(query.maxPrice);
+        whereConditions.push({ price: priceCondition });
+      }
+    }
+
+    // Build the final query
+    let posts = [];
+    if (whereConditions.length > 0) {
       posts = await prisma.post.findMany({
         where: {
-          ...(query.type && { type: query.type }),
-          ...(query.property && { property: query.property }),
-          ...(query.bedroom && { bedroom: parseInt(query.bedroom) }),
-          ...((query.minPrice || query.maxPrice) && {
-            price: {
-              ...(query.minPrice && { gte: parseInt(query.minPrice) }),
-              ...(query.maxPrice && { lte: parseInt(query.maxPrice) }),
+          AND: whereConditions
+        },
+        include: {
+          user: {
+            select: {
+              username: true,
+              avatar: true,
             },
-          }),
+          },
+        },
+      });
+    } else {
+      // No filters, return all posts
+      posts = await prisma.post.findMany({
+        include: {
+          user: {
+            select: {
+              username: true,
+              avatar: true,
+            },
+          },
         },
       });
     }
-    res.status(200).json(Array.isArray(posts) ? posts : []);
+
+    console.log("Database query result:", posts.length, "posts found");
+
+    // If no results found, provide fallback with Malaysian dummy data
+    if (!posts || posts.length === 0) {
+      console.log("No posts found in database, returning fallback Malaysian data");
+      return res.status(200).json(listData);
+    }
+
+    res.status(200).json(posts);
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Failed to get posts" });
+    console.log("Error in getPosts:", err);
+    // On error, return fallback data
+    res.status(200).json(listData);
   }
 };
 

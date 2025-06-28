@@ -21,15 +21,41 @@ function ListPage() {
               errorElement={<p>Error loading posts!</p>}
             >
               {(postResponse) => {
-                if (!postResponse || !Array.isArray(postResponse.data)) {
+                console.log("Post response:", postResponse);
+                
+                // Handle the new response format with fallback
+                const posts = postResponse.data || postResponse;
+                const isFallback = postResponse.fallback;
+                const message = postResponse.message;
+                
+                if (!Array.isArray(posts)) {
                   return <p>Error loading posts!</p>;
                 }
-                if (postResponse.data.length === 0) {
+                
+                if (posts.length === 0) {
                   return <p>No results found for your search.</p>;
                 }
-                return postResponse.data.map((post) => (
-                  <Card key={post.id} item={post} />
-                ));
+                
+                return (
+                  <>
+                    {isFallback && message && (
+                      <div style={{ 
+                        padding: "10px", 
+                        backgroundColor: "#f0f8ff", 
+                        border: "1px solid #ccc", 
+                        borderRadius: "5px", 
+                        marginBottom: "20px" 
+                      }}>
+                        <p style={{ margin: 0, fontWeight: "bold", color: "#333" }}>
+                          {message}
+                        </p>
+                      </div>
+                    )}
+                    {posts.map((post) => (
+                      <Card key={post.id} item={post} />
+                    ))}
+                  </>
+                );
               }}
             </Await>
           </Suspense>
@@ -41,7 +67,10 @@ function ListPage() {
             resolve={data.postResponse}
             errorElement={<p>Error loading posts!</p>}
           >
-            {(postResponse) => <Map items={Array.isArray(postResponse.data) ? postResponse.data : []} />}
+            {(postResponse) => {
+              const posts = postResponse.data || postResponse;
+              return <Map items={Array.isArray(posts) ? posts : []} />;
+            }}
           </Await>
         </Suspense>
       </div>

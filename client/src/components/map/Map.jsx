@@ -1,6 +1,8 @@
-import { MapContainer, TileLayer } from "react-leaflet";
 import "./map.scss";
 import "leaflet/dist/leaflet.css";
+
+import { MapContainer, TileLayer } from "react-leaflet";
+
 import Pin from "../pin/Pin";
 
 function Map({ items }) {
@@ -9,7 +11,7 @@ function Map({ items }) {
       center={
         items.length === 1
           ? [items[0].latitude, items[0].longitude]
-          : [52.4797, -1.90269]
+          : [3.1319, 101.6841] // Default to Kuala Lumpur, Malaysia
       }
       zoom={7}
       scrollWheelZoom={false}
