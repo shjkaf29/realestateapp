@@ -63,17 +63,6 @@ function SinglePage() {
                 <div className="price">$ {post.price}</div>
                 <div className="action-buttons" style={{display:'flex', gap:16, marginTop:24}}>
                   <button
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      background: '#fff', border: '1.5px solid #ddd', borderRadius: 8, padding: '12px 24px', fontWeight: 500, fontSize: 16, cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', transition: 'all 0.2s', height: 48
-                    }}
-                    onMouseOver={e => e.currentTarget.style.borderColor = '#fece51'}
-                    onMouseOut={e => e.currentTarget.style.borderColor = '#ddd'}
-                  >
-                    <img src="/chat.png" alt="" style={{width: 22, height: 22}} />
-                    Send a Message
-                  </button>
-                  <button
                     onClick={handleSave}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 8,

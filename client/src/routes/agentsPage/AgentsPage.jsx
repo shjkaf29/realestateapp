@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import apiRequest from "../../lib/apiRequest";
+import Card from "../../components/card/Card";
 
 function AgentsPage() {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedAgent, setSelectedAgent] = useState(null);
+  const [agentProperties, setAgentProperties] = useState([]);
+  const [propertiesLoading, setPropertiesLoading] = useState(false);
+  const [propertiesError, setPropertiesError] = useState("");
   const [contactId, setContactId] = useState(null);
   const [emailBody, setEmailBody] = useState("");
   const [emailStatus, setEmailStatus] = useState("");
@@ -23,6 +28,21 @@ function AgentsPage() {
     fetchAgents();
   }, []);
 
+  const handleAgentClick = async (agent) => {
+    setSelectedAgent(agent);
+    setAgentProperties([]);
+    setPropertiesError("");
+    setPropertiesLoading(true);
+    try {
+      const res = await apiRequest.get(`/posts?userId=${agent.id}`);
+      setAgentProperties(res.data);
+    } catch (err) {
+      setPropertiesError("Failed to load properties.");
+    } finally {
+      setPropertiesLoading(false);
+    }
+  };
+
   const handleContact = async (agent) => {
     // Here you would call your backend to send the email
     // For now, just simulate success
@@ -39,10 +59,10 @@ function AgentsPage() {
       <h1 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: 32 }}>Agents</h1>
       {loading && <div>Loading...</div>}
       {error && <div style={{ color: "red" }}>{error}</div>}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 32 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 32, marginBottom: 40 }}>
         {agents.map((agent) => (
           <div key={agent.id} style={{
-            background: "#fff",
+            background: selectedAgent?.id === agent.id ? "#fffbe6" : "#fff",
             borderRadius: 12,
             boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
             minWidth: 320,
@@ -53,13 +73,17 @@ function AgentsPage() {
             flexDirection: "column",
             alignItems: "center",
             marginBottom: 24,
-          }}>
+            cursor: "pointer",
+            border: selectedAgent?.id === agent.id ? "2px solid #fece51" : "none"
+          }}
+          onClick={() => handleAgentClick(agent)}
+          >
             <img src={agent.avatar || "/noavatar.jpg"} alt="avatar" style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", marginBottom: 16, background: "#eee" }} />
             <div style={{ fontWeight: 600, fontSize: 20, marginBottom: 6 }}>{agent.username}</div>
             <div style={{ color: "#888", fontSize: 15, marginBottom: 10 }}>{agent.email}</div>
             <button
               style={{ background: "#fece51", border: "none", borderRadius: 6, padding: "10px 22px", fontWeight: 600, fontSize: 15, color: "#222", cursor: "pointer", marginTop: 8 }}
-              onClick={() => { setContactId(agent.id); setEmailStatus(""); }}
+              onClick={e => { e.stopPropagation(); setContactId(agent.id); setEmailStatus(""); }}
             >
               Contact
             </button>
@@ -89,6 +113,27 @@ function AgentsPage() {
         ))}
         {(!loading && agents.length === 0) && <div style={{ color: '#888', fontSize: 18 }}>No agents found.</div>}
       </div>
+      {selectedAgent && (
+        <div style={{ marginBottom: 40 }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 16 }}>Agent Details</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24, background: '#fffbe6', borderRadius: 12, padding: 24, boxShadow: '0 2px 16px rgba(0,0,0,0.07)', marginBottom: 24 }}>
+            <img src={selectedAgent.avatar || "/noavatar.jpg"} alt="avatar" style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", background: "#eee" }} />
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 20, marginBottom: 6 }}>{selectedAgent.username}</div>
+              <div style={{ color: "#888", fontSize: 15, marginBottom: 10 }}>{selectedAgent.email}</div>
+            </div>
+          </div>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: 16 }}>Properties by agent</h3>
+          {propertiesLoading && <div>Loading properties...</div>}
+          {propertiesError && <div style={{ color: 'red' }}>{propertiesError}</div>}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+            {agentProperties.map((post) => (
+              <Card key={post.id} item={post} />
+            ))}
+            {(!propertiesLoading && agentProperties.length === 0) && <div style={{ color: '#888', fontSize: 18 }}>No properties found for this agent.</div>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
