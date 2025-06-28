@@ -22,11 +22,18 @@ export const bookAppointment = async (req, res) => {
 };
 
 export const getAgentAppointments = async (req, res) => {
-  const agentId = req.user.id;
+  const agentId = req.userId;
   try {
     const appointments = await prisma.appointment.findMany({
       where: { agentId },
-      include: { customer: true },
+      include: {
+        customer: true,
+        post: {
+          include: {
+            postDetail: true,
+          },
+        },
+      },
     });
     res.json(appointments);
   } catch (err) {
