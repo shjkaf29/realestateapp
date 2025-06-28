@@ -27,13 +27,6 @@ function Login() {
         password,
       });
 
-      // Only allow agents to log in
-      if (res.data.role !== "agent") {
-        setError("Only agents can log in here. Please use the customer login page if you are a customer.");
-        setIsLoading(false);
-        return;
-      }
-
       updateUser(res.data);
       navigate("/");
     } catch (err) {
@@ -47,7 +40,7 @@ function Login() {
     <div className="login">
       <div className="formContainer">
         <form onSubmit={handleSubmit}>
-          <h1>Agent Login</h1>
+          <h1>Login</h1>
           <input
             name="username"
             required

@@ -1,17 +1,24 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import "./newPostPage.scss";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import apiRequest from "../../lib/apiRequest";
 import UploadWidget from "../../components/uploadWidget/UploadWidget";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 
 function NewPostPage() {
+  const { currentUser } = useContext(AuthContext);
   const [value, setValue] = useState("");
   const [images, setImages] = useState([]);
   const [error, setError] = useState("");
 
   const navigate = useNavigate()
+
+  if (currentUser?.role !== "agent") {
+    setTimeout(() => navigate("/"), 2000);
+    return <div style={{padding: 40, textAlign: 'center', color: 'red'}}>Only agents can create listings. Redirecting to home...</div>;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
