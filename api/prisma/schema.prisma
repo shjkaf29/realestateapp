@@ -82,6 +82,8 @@ model User {
   chats      Chat[]      @relation(fields: [chatIDs], references: [id])
   chatIDs    String[]    @db.ObjectId
   role       String      @default("customer") // <-- Add this line
+  customerAppointments Appointment[] @relation("CustomerAppointments")
+  agentAppointments    Appointment[] @relation("AgentAppointments")
 }
 
 model Chat {
@@ -101,4 +103,15 @@ model Message {
   chat      Chat     @relation(fields: [chatId], references: [id])
   chatId    String   @db.ObjectId
   createdAt DateTime @default(now())
+}
+
+model Appointment {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  customer    User     @relation("CustomerAppointments", fields: [customerId], references: [id])
+  customerId  String   @db.ObjectId
+  agent       User     @relation("AgentAppointments", fields: [agentId], references: [id])
+  agentId     String   @db.ObjectId
+  date        DateTime
+  status      String   @default("pending") // pending, accepted, rejected, completed
+  createdAt   DateTime @default(now())
 }
