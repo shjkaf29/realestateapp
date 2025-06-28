@@ -1,0 +1,17 @@
+{
+  "name": "full-stack-estate-main",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run server --prefix api\" \"npm run socket --prefix socket\"",
+    "server": "node api/app.js",
+    "socket": "node app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
