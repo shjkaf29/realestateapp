@@ -3,7 +3,7 @@ import prisma from "../lib/prisma.js";
 
 export const bookAppointment = async (req, res) => {
   const { agentId, date, notes } = req.body;
-  const customerId = req.user.id; // assuming you have auth middleware
+  const customerId = req.userId;
 
   try {
     const appointment = await prisma.appointment.create({

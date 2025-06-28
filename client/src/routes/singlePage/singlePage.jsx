@@ -17,6 +17,7 @@ function SinglePage() {
   const [appointmentDate, setAppointmentDate] = useState("");
   const [notes, setNotes] = useState("");
   const [bookingMsg, setBookingMsg] = useState("");
+  const [timeError, setTimeError] = useState("");
 
   const handleSave = async () => {
     if (!currentUser) {
@@ -30,6 +31,20 @@ function SinglePage() {
       console.log(err);
       setSaved((prev) => !prev);
     }
+  };
+
+  const getMinDateTime = () => {
+    const now = new Date();
+    const pad = (n) => n.toString().padStart(2, '0');
+    return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  };
+
+  // Helper to check if time is between 9am and 5pm
+  const isTimeInRange = (dateTimeStr) => {
+    if (!dateTimeStr) return false;
+    const date = new Date(dateTimeStr);
+    const hours = date.getHours();
+    return hours >= 9 && hours < 17;
   };
 
   return (
@@ -191,6 +206,11 @@ function SinglePage() {
               onSubmit={async (e) => {
                 e.preventDefault();
                 setBookingMsg("");
+                setTimeError("");
+                if (!isTimeInRange(appointmentDate)) {
+                  setTimeError("Please select a time between 9:00 AM and 5:00 PM.");
+                  return;
+                }
                 try {
                   await apiRequest.post("/appointments/book", {
                     agentId: post.user.id,
@@ -214,7 +234,7 @@ function SinglePage() {
               </div>
               <div style={{marginBottom:18}}>
                 <label style={{fontWeight:600, fontSize:15, marginBottom:6, display:'block'}}>Date:</label>
-                <input type="datetime-local" required value={appointmentDate} onChange={e => setAppointmentDate(e.target.value)} style={{width:'100%', borderRadius:8, border:'1.5px solid #eee', padding:'12px', fontSize:15, background:'#f8f8f8'}} />
+                <input type="datetime-local" required value={appointmentDate} onChange={e => setAppointmentDate(e.target.value)} style={{width:'100%', borderRadius:8, border:'1.5px solid #eee', padding:'12px', fontSize:15, background:'#f8f8f8'}} min={getMinDateTime()} />
               </div>
               <div style={{marginBottom:18}}>
                 <label style={{fontWeight:600, fontSize:15, marginBottom:6, display:'block'}}>Notes:</label>
@@ -225,6 +245,7 @@ function SinglePage() {
                 <button type="submit" style={{background:'#fece51', border:'none', borderRadius:6, padding:'10px 22px', fontWeight:600, fontSize:15, color:'#222', cursor:'pointer', transition:'all 0.2s'}}>Book</button>
               </div>
               {bookingMsg && <div style={{marginTop:16, color:'green', fontWeight:500}}>{bookingMsg}</div>}
+              {timeError && <div style={{marginBottom:10, color:'red', fontWeight:500}}>{timeError}</div>}
             </form>
           </div>
         </div>
