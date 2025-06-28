@@ -1,6 +1,7 @@
-import { useState } from "react";
 import "./searchBar.scss";
+
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 const types = ["buy", "rent"];
 
@@ -57,7 +58,10 @@ function SearchBar() {
           onChange={handleChange}
         />
         <Link
-          to={`/list?type=${query.type}&city=${query.city}&minPrice=${query.minPrice}&maxPrice=${query.maxPrice}`}
+          to={`/list?${Object.entries(query)
+            .filter(([, value]) => value && value !== '' && value !== 0)
+            .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+            .join('&')}`}
         >
           <button>
             <img src="/search.png" alt="" />

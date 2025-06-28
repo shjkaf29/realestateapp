@@ -35,6 +35,11 @@ function Navbar() {
               {number > 0 && <div className="notification">{number}</div>}
               <span>Profile</span>
             </Link>
+            {currentUser.role === "agent" && (
+              <Link to="/add" className="profile">
+                <span>Create New Post</span>
+              </Link>
+            )}
           </div>
         ) : (
           <>

@@ -1,6 +1,7 @@
-import { useState } from "react";
 import "./filter.scss";
+
 import { useSearchParams } from "react-router-dom";
+import { useState } from "react";
 
 function Filter() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -21,7 +22,12 @@ function Filter() {
   };
 
   const handleFilter = () => {
-    setSearchParams(query);
+    // Filter out empty values before setting search params
+    const filteredQuery = Object.entries(query)
+      .filter(([, value]) => value && value !== '' && value !== 'any')
+      .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+    
+    setSearchParams(filteredQuery);
   };
 
   return (
