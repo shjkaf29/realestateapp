@@ -100,9 +100,15 @@ function SinglePage() {
                   </button>
                 </div>
               </div>
-              <div className="user">
-                <img src={post.user.avatar} alt="" />
-                <span>{post.user.username}</span>
+              <div className="user" style={{margin: 0, background: 'none'}}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  background: '#fff', border: '1.5px solid #ddd', borderRadius: 8,
+                  padding: '12px 24px', height: 48, minWidth: 0, maxWidth: 180, boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
+                }}>
+                  <img src={(post.user?.avatar) || '/noavatar.jpg'} alt="" style={{width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', background: '#eee'}} />
+                  <span style={{fontWeight: 500, fontSize: 16, color: '#222', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{post.user?.username || "Unknown agent"}</span>
+                </div>
               </div>
             </div>
             <div
