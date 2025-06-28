@@ -2,7 +2,7 @@
 import prisma from "../lib/prisma.js";
 
 export const bookAppointment = async (req, res) => {
-  const { agentId, date, notes } = req.body;
+  const { agentId, postId, date, notes } = req.body;
   const customerId = req.userId;
 
   try {
@@ -10,6 +10,7 @@ export const bookAppointment = async (req, res) => {
       data: {
         customerId,
         agentId,
+        postId,
         date: new Date(date),
         notes,
       },
@@ -43,5 +44,31 @@ export const acceptAppointment = async (req, res) => {
     res.json(appointment);
   } catch (err) {
     res.status(500).json({ message: "Failed to accept appointment" });
+  }
+};
+
+export const getUserAppointments = async (req, res) => {
+  const userId = req.userId;
+  try {
+    const appointments = await prisma.appointment.findMany({
+      where: { customerId: userId },
+      include: {
+        post: {
+          include: {
+            postDetail: true,
+            user: {
+              select: {
+                username: true,
+                avatar: true,
+                id: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    res.json(appointments);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch appointments" });
   }
 };

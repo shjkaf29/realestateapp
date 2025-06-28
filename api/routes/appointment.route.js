@@ -1,4 +1,4 @@
-import { acceptAppointment, bookAppointment, getAgentAppointments } from "../controllers/appointment.controller.js";
+import { acceptAppointment, bookAppointment, getAgentAppointments, getUserAppointments } from "../controllers/appointment.controller.js";
 
 // api/routes/appointment.route.js
 import express from "express";
@@ -9,5 +9,6 @@ const router = express.Router();
 router.post("/book", verifyToken, bookAppointment);
 router.get("/agent", verifyToken, getAgentAppointments);
 router.patch("/:id/accept", verifyToken, acceptAppointment);
+router.get("/user", verifyToken, getUserAppointments);
 
 export default router;

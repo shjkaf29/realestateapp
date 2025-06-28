@@ -31,6 +31,7 @@ model Post {
   userId     String?     @db.ObjectId
   postDetail PostDetail?
   savedPosts SavedPost[]
+  appointments Appointment[]
 }
 
 enum Type {
@@ -111,6 +112,8 @@ model Appointment {
   customerId  String   @db.ObjectId
   agent       User     @relation("AgentAppointments", fields: [agentId], references: [id])
   agentId     String   @db.ObjectId
+  post        Post?    @relation(fields: [postId], references: [id])
+  postId      String?  @db.ObjectId
   date        DateTime
   status      String   @default("pending") // pending, accepted, rejected, completed
   createdAt   DateTime @default(now())

@@ -220,6 +220,7 @@ function SinglePage() {
                 try {
                   await apiRequest.post("/appointments/book", {
                     agentId: post.user.id,
+                    postId: post.id,
                     date: appointmentDate,
                     notes,
                   });

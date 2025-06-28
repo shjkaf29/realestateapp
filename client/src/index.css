@@ -1,0 +1,4 @@
+/* Always show vertical scrollbar for consistent layout */
+html, body {
+  overflow-y: scroll;
+}

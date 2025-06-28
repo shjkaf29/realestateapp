@@ -154,3 +154,21 @@ export const getNotificationNumber = async (req, res) => {
     res.status(500).json({ message: "Failed to get profile posts!" });
   }
 };
+
+export const getAgents = async (req, res) => {
+  try {
+    const agents = await prisma.user.findMany({
+      where: { role: 'agent' },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        email: true,
+      },
+    });
+    res.status(200).json(agents);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Failed to get agents!" });
+  }
+};
