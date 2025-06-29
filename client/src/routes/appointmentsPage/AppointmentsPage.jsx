@@ -108,6 +108,21 @@ function AppointmentsPage() {
     setEditNotes("");
   };
 
+   if (!currentUser) {
+    return (
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 16px" }}>
+
+      <h1 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: 32 }}>My Appointments</h1>
+          Login to view your appointments
+      <p></p>
+      </div>
+      
+
+
+     
+    );
+  }
+
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 16px" }}>
       <h1 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: 32 }}>My Appointments</h1>
