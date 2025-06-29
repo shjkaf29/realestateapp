@@ -85,6 +85,8 @@ model User {
   role       String      @default("customer") // <-- Add this line
   customerAppointments Appointment[] @relation("CustomerAppointments")
   agentAppointments    Appointment[] @relation("AgentAppointments")
+  sentMessages     ContactMessage[] @relation("SentMessages")
+  receivedMessages ContactMessage[] @relation("ReceivedMessages")
 }
 
 model Chat {
@@ -118,4 +120,18 @@ model Appointment {
   status      String   @default("pending") // pending, accepted, rejected, completed
   createdAt   DateTime @default(now())
   notes       String?
+}
+
+model ContactMessage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  sender    User     @relation("SentMessages", fields: [senderId], references: [id])
+  senderId  String   @db.ObjectId
+  recipient User     @relation("ReceivedMessages", fields: [recipientId], references: [id])
+  recipientId String @db.ObjectId
+  subject   String?
+  message   String
+  senderName String
+  senderEmail String
+  createdAt DateTime @default(now())
+  isRead    Boolean  @default(false)
 }

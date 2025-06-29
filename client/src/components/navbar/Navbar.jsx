@@ -27,6 +27,7 @@ function Navbar() {
         <Link to="/about">About</Link>
         <a href="/appointments">Appointments</a>
         <Link to="/agents">Agents</Link>
+        {currentUser?.role === "agent" && <Link to="/messages">Messages</Link>}
       </div>
       <div className="right">
         {currentUser ? (
@@ -58,6 +59,7 @@ function Navbar() {
           <Link to="/about">About</Link>
           <a href="/appointments">Appointments</a>
           <Link to="/agents">Agents</Link>
+          {currentUser?.role === "agent" && <Link to="/messages">Messages</Link>}
           <a href="/">Sign in</a>
           <a href="/">Sign up</a>
         </div>

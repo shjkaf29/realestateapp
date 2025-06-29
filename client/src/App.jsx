@@ -13,6 +13,7 @@ import Register from "./routes/register/register";
 import SinglePage from "./routes/singlePage/singlePage";
 import AppointmentsPage from "./routes/appointmentsPage/AppointmentsPage";
 import AgentsPage from "./routes/agentsPage/AgentsPage";
+import MessagesPage from "./routes/messagesPage/MessagesPage";
 
 function App() {
   const router = createBrowserRouter([
@@ -54,6 +55,10 @@ function App() {
         {
           path: "/agents",
           element: <AgentsPage />,
+        },
+        {
+          path: "/messages",
+          element: <MessagesPage />,
         },
       ],
     },

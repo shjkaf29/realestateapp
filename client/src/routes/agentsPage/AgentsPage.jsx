@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import apiRequest from "../../lib/apiRequest";
 import Card from "../../components/card/Card";
+import { AuthContext } from "../../context/AuthContext";
 
 function AgentsPage() {
+  const { currentUser } = useContext(AuthContext);
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -44,14 +46,26 @@ function AgentsPage() {
   };
 
   const handleContact = async (agent) => {
-    // Here you would call your backend to send the email
-    // For now, just simulate success
+    if (!currentUser) {
+      setEmailStatus("Please login to send messages.");
+      return;
+    }
+    
     setEmailStatus("Sending...");
-    setTimeout(() => {
-      setEmailStatus("Email sent to " + agent.email + "!");
+    try {
+      await apiRequest.post("/contact-messages/send", {
+        recipientId: agent.id,
+        message: emailBody,
+        subject: "Contact from Customer",
+        senderName: currentUser.username,
+        senderEmail: currentUser.email,
+      });
+      setEmailStatus("Message sent to " + agent.username + "!");
       setContactId(null);
       setEmailBody("");
-    }, 1200);
+    } catch (err) {
+      setEmailStatus("Failed to send message. Please try again.");
+    }
   };
 
   return (
