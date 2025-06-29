@@ -68,11 +68,13 @@ function AppointmentsPage() {
 
   const handleUpdate = async (id) => {
     try {
-      const response = await apiRequest.put(`/appointments/${id}`, {
+      await apiRequest.patch(`/appointments/${id}`, {
         date: editDate,
         notes: editNotes,
       });
-      setAppointments(prev => prev.map(a => a.id === id ? response.data : a));
+      // Re-fetch all appointments to ensure fresh data
+      const res = await apiRequest.get("/appointments/user");
+      setAppointments(res.data);
       setEditingId(null);
       setEditDate("");
       setEditNotes("");

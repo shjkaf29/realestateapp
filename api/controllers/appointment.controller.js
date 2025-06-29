@@ -92,3 +92,40 @@ export const cancelAppointment = async (req, res) => {
     res.status(500).json({ message: "Failed to cancel appointment" });
   }
 };
+
+export const updateAppointment = async (req, res) => {
+  const { id } = req.params;
+  const { date, notes } = req.body;
+  try {
+    await prisma.appointment.update({
+      where: { id },
+      data: {
+        ...(date && { date: new Date(date) }),
+        ...(notes !== undefined && { notes }),
+      },
+    });
+    // Fetch the full appointment with relations
+    const fullAppointment = await prisma.appointment.findUnique({
+      where: { id },
+      include: {
+        post: {
+          include: {
+            postDetail: true,
+            user: {
+              select: {
+                username: true,
+                avatar: true,
+                id: true,
+              },
+            },
+          },
+        },
+        customer: true,
+      },
+    });
+    res.json(fullAppointment);
+  } catch (err) {
+    console.error("Update appointment error:", err);
+    res.status(500).json({ message: "Failed to update appointment" });
+  }
+};
