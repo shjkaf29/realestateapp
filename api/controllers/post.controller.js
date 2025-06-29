@@ -120,29 +120,34 @@ export const getPost = async (req, res) => {
       },
     });
 
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
     const token = req.cookies?.token;
+    let isSaved = false;
 
     if (token) {
-      jwt.verify(token, process.env.JWT_SECRET_KEY, async (err, payload) => {
-        if (!err) {
-          const saved = await prisma.savedPost.findUnique({
-            where: {
-              userId_postId: {
-                postId: id,
-                userId: payload.id,
-              },
+      try {
+        const payload = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        const saved = await prisma.savedPost.findUnique({
+          where: {
+            userId_postId: {
+              postId: id,
+              userId: payload.id,
             },
-          });
-          return res.status(200).json({ ...post, isSaved: saved ? true : false });
-        } else {
-          return res.status(200).json({ ...post, isSaved: false });
-        }
-      });
-    } else {
-      return res.status(200).json({ ...post, isSaved: false });
+          },
+        });
+        isSaved = Boolean(saved);
+      } catch (err) {
+        // Token verification failed, continue with isSaved = false
+        console.log("Token verification failed:", err.message);
+      }
     }
+
+    res.status(200).json({ ...post, isSaved });
   } catch (err) {
-    console.log(err);
+    console.log("Error in getPost:", err);
     res.status(500).json({ message: "Failed to get post" });
   }
 };
@@ -169,11 +174,56 @@ export const addPost = async (req, res) => {
 };
 
 export const updatePost = async (req, res) => {
+  const id = req.params.id;
+  const tokenUserId = req.userId;
+  const body = req.body;
+
   try {
-    res.status(200).json();
+    console.log("Update request for post:", id);
+    console.log("Request body:", body);
+    
+    // Check if post exists and user owns it
+    const existingPost = await prisma.post.findUnique({
+      where: { id },
+      include: { postDetail: true },
+    });
+
+    if (!existingPost) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    if (existingPost.userId !== tokenUserId) {
+      return res.status(403).json({ message: "Not Authorized!" });
+    }
+
+    // Update the post and upsert postDetail
+    const updatedPost = await prisma.post.update({
+      where: { id },
+      data: {
+        ...body.postData,
+        postDetail: {
+          upsert: {
+            create: body.postDetail,
+            update: body.postDetail,
+          },
+        },
+      },
+      include: {
+        postDetail: true,
+        user: {
+          select: {
+            username: true,
+            avatar: true,
+            id: true,
+          },
+        },
+      },
+    });
+
+    res.status(200).json(updatedPost);
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Failed to update posts" });
+    console.log("Error updating post:", err);
+    res.status(500).json({ message: "Failed to update post", error: err.message });
   }
 };
 
@@ -182,21 +232,48 @@ export const deletePost = async (req, res) => {
   const tokenUserId = req.userId;
 
   try {
+    console.log("Attempting to delete post:", id);
+    
+    // Check if post exists
     const post = await prisma.post.findUnique({
       where: { id },
     });
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
 
     if (post.userId !== tokenUserId) {
       return res.status(403).json({ message: "Not Authorized!" });
     }
 
-    await prisma.post.delete({
-      where: { id },
+    // Use transaction to delete all related records
+    await prisma.$transaction(async (tx) => {
+      // Delete saved posts
+      await tx.savedPost.deleteMany({
+        where: { postId: id },
+      });
+
+      // Delete appointments
+      await tx.appointment.deleteMany({
+        where: { postId: id },
+      });
+
+      // Delete post details (one-to-one relationship)
+      await tx.postDetail.deleteMany({
+        where: { postId: id },
+      });
+
+      // Finally delete the post
+      await tx.post.delete({
+        where: { id },
+      });
     });
 
+    console.log("Post deleted successfully:", id);
     res.status(200).json({ message: "Post deleted" });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Failed to delete post" });
+    console.log("Error deleting post:", err);
+    res.status(500).json({ message: "Failed to delete post", error: err.message });
   }
 };
