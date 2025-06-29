@@ -14,8 +14,8 @@ import ProfilePage from "./routes/profilePage/profilePage";
 import ProfileUpdatePage from "./routes/profileUpdatePage/profileUpdatePage";
 import Register from "./routes/register/register";
 import SinglePage from "./routes/singlePage/singlePage";
-import AppointmentsPage from "./routes/appointmentsPage/AppointmentsPage";
-import AgentsPage from "./routes/agentsPage/AgentsPage";
+// import AppointmentsPage from "./routes/appointmentsPage/AppointmentsPage";
+// import AgentsPage from "./routes/agentsPage/AgentsPage";
 import MessagesPage from "./routes/messagesPage/MessagesPage";
 
 function App() {
