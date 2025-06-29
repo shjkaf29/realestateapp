@@ -1,6 +1,6 @@
 import "./singlePage.scss";
 
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { useLoaderData, useNavigate } from "react-router-dom";
 
 import { AuthContext } from "../../context/AuthContext";
@@ -12,6 +12,7 @@ import apiRequest from "../../lib/apiRequest";
 function SinglePage() {
   const post = useLoaderData();
   const [saved, setSaved] = useState(post.isSaved);
+  const [saving, setSaving] = useState(false);
   const { currentUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
@@ -20,17 +21,54 @@ function SinglePage() {
   const [bookingMsg, setBookingMsg] = useState("");
   const [timeError, setTimeError] = useState("");
 
+  // Debug: Log the initial state
+  console.log("SinglePage loaded - Post:", post.id, "Initial isSaved:", post.isSaved, "Current user:", currentUser?.id);
+
+  // Only update saved state when user changes, not on every component mount
+  useEffect(() => {
+    if (!currentUser) {
+      setSaved(false);
+    } else {
+      // Set saved state from initial post data
+      setSaved(post.isSaved);
+    }
+  }, [currentUser, post.isSaved]);
+
   const handleSave = async () => {
     if (!currentUser) {
       navigate("/login");
+      return;
     }
-    // AFTER REACT 19 UPDATE TO USEOPTIMISTIK HOOK
-    setSaved((prev) => !prev);
+    
+    if (saving) return; // Prevent multiple clicks
+    
+    setSaving(true);
+    
+    // Optimistically update the UI
+    const previousSavedState = saved;
+    setSaved(!saved);
+    
     try {
-      await apiRequest.post("/users/save", { postId: post.id });
+      console.log("Current saved state before toggle:", previousSavedState);
+      const response = await apiRequest.post("/users/save", { postId: post.id });
+      console.log("Backend response:", response.data);
+      
+      // Backend returns "Post saved" or "Post removed from saved list"  
+      const wasSaved = response.data.message === "Post saved";
+      console.log("New saved state:", wasSaved);
+      
+      // Update state based on server response (in case our optimistic update was wrong)
+      setSaved(wasSaved);
     } catch (err) {
-      console.log(err);
-      setSaved((prev) => !prev);
+      console.error("Error saving post:", err);
+      
+      // Revert the optimistic update on error
+      setSaved(previousSavedState);
+      
+      // Show user-friendly error message
+      alert("Failed to save post. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -89,18 +127,20 @@ function SinglePage() {
                     <>
                       <button
                         onClick={handleSave}
+                        disabled={saving}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 8,
                           background: saved ? '#fece51' : '#fff',
-                          border: '1.5px solid #ddd', borderRadius: 8, padding: '12px 24px', fontWeight: 500, fontSize: 16, cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', transition: 'all 0.2s', height: 48
+                          border: '1.5px solid #ddd', borderRadius: 8, padding: '12px 24px', fontWeight: 500, fontSize: 16, cursor: saving ? 'not-allowed' : 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', transition: 'all 0.2s', height: 48,
+                          opacity: saving ? 0.7 : 1
                         }}
-                        onMouseOver={e => e.currentTarget.style.borderColor = '#fece51'}
-                        onMouseOut={e => e.currentTarget.style.borderColor = '#ddd'}
-                        onFocus={e => e.currentTarget.style.borderColor = '#fece51'}
-                        onBlur={e => e.currentTarget.style.borderColor = '#ddd'}
+                        onMouseOver={e => !saving && (e.currentTarget.style.borderColor = '#fece51')}
+                        onMouseOut={e => !saving && (e.currentTarget.style.borderColor = '#ddd')}
+                        onFocus={e => !saving && (e.currentTarget.style.borderColor = '#fece51')}
+                        onBlur={e => !saving && (e.currentTarget.style.borderColor = '#ddd')}
                       >
                         <img src="/save.png" alt="" style={{width: 22, height: 22}} />
-                        {saved ? "Saved" : "Save"}
+                        {saving ? "Saving..." : (saved ? "Saved" : "Save")}
                       </button>
                       <button
                         style={{
