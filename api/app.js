@@ -14,6 +14,14 @@ import contactMessageRoute from "./routes/contactMessage.route.js";
 
 const app = express();
 
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`[APP] ${req.method} ${req.originalUrl}`);
+  console.log(`[APP] Headers:`, req.headers);
+  console.log(`[APP] Cookies:`, req.cookies);
+  next();
+});
+
 app.use(
   cors({
     origin: [process.env.CLIENT_URL, "http://localhost:5173"],

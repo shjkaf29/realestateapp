@@ -1,4 +1,4 @@
-import { acceptAppointment, bookAppointment, getAgentAppointments, getUserAppointments, cancelAppointment, updateAppointment } from "../controllers/appointment.controller.js";
+import { acceptAppointment, bookAppointment, getAgentAppointments, getUserAppointments, cancelAppointment, updateAppointment, deleteAppointment } from "../controllers/appointment.controller.js";
 
 // api/routes/appointment.route.js
 import express from "express";
@@ -12,5 +12,6 @@ router.patch("/:id/accept", verifyToken, acceptAppointment);
 router.get("/user", verifyToken, getUserAppointments);
 router.patch("/:id/cancel", verifyToken, cancelAppointment);
 router.patch("/:id", verifyToken, updateAppointment);
+router.delete("/:id", verifyToken, deleteAppointment);
 
 export default router;

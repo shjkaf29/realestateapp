@@ -129,3 +129,23 @@ export const updateAppointment = async (req, res) => {
     res.status(500).json({ message: "Failed to update appointment" });
   }
 };
+
+export const deleteAppointment = async (req, res) => {
+  const { id } = req.params;
+  console.log(`[deleteAppointment] Controller called for appointment id:`, id);
+  console.log(`[deleteAppointment] Request params:`, req.params);
+  console.log(`[deleteAppointment] Request body:`, req.body);
+  console.log(`[deleteAppointment] User ID from middleware:`, req.userId);
+  
+  try {
+    console.log(`[deleteAppointment] Attempting to delete appointment with id:`, id);
+    await prisma.appointment.delete({ where: { id } });
+    console.log(`[deleteAppointment] Appointment deleted successfully`);
+    res.status(204).end();
+  } catch (err) {
+    console.error(`[deleteAppointment] Delete appointment error:`, err);
+    console.error(`[deleteAppointment] Error name:`, err.name);
+    console.error(`[deleteAppointment] Error message:`, err.message);
+    res.status(500).json({ message: "Failed to delete appointment" });
+  }
+};
