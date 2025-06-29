@@ -1,12 +1,13 @@
 import "./singlePage.scss";
-import Slider from "../../components/slider/Slider";
-import Map from "../../components/map/Map";
-import { useNavigate, useLoaderData } from "react-router-dom";
-import DOMPurify from "dompurify";
+
 import { useContext, useState } from "react";
+import { useLoaderData, useNavigate } from "react-router-dom";
+
 import { AuthContext } from "../../context/AuthContext";
+import DOMPurify from "dompurify";
+import Map from "../../components/map/Map";
+import Slider from "../../components/slider/Slider";
 import apiRequest from "../../lib/apiRequest";
-import dayjs from "dayjs";
 
 function SinglePage() {
   const post = useLoaderData();
@@ -47,6 +48,27 @@ function SinglePage() {
     return hours >= 9 && hours < 17;
   };
 
+  // Check if current user is the property owner and is an agent
+  const isPropertyOwner = currentUser && post.user && currentUser.id === post.user.id;
+  const canEditProperty = isPropertyOwner && currentUser?.role === "agent";
+  const canMeetAgent = currentUser && currentUser?.role === "customer" && !isPropertyOwner;
+
+  const handleEdit = () => {
+    navigate(`/edit-post/${post.id}`);
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this property? This action cannot be undone.")) {
+      try {
+        await apiRequest.delete(`/posts/${post.id}`);
+        navigate("/list");
+      } catch (err) {
+        console.log(err);
+        alert("Failed to delete property. Please try again.");
+      }
+    }
+  };
+
   return (
     <div className="singlePage">
       <div className="details">
@@ -61,32 +83,75 @@ function SinglePage() {
                   <span>{post.address}</span>
                 </div>
                 <div className="price">$ {post.price}</div>
-                <div className="action-buttons" style={{display:'flex', gap:16, marginTop:24}}>
-                  <button
-                    onClick={handleSave}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      background: saved ? '#fece51' : '#fff',
-                      border: '1.5px solid #ddd', borderRadius: 8, padding: '12px 24px', fontWeight: 500, fontSize: 16, cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', transition: 'all 0.2s', height: 48
-                    }}
-                    onMouseOver={e => e.currentTarget.style.borderColor = '#fece51'}
-                    onMouseOut={e => e.currentTarget.style.borderColor = '#ddd'}
-                  >
-                    <img src="/save.png" alt="" style={{width: 22, height: 22}} />
-                    {saved ? "Saved" : "Save"}
-                  </button>
-                  <button
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      background: '#fece51', color: '#222', fontWeight: 600, border: 'none', borderRadius: 8, padding: '12px 24px', fontSize: 16, cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', height: 48, transition: 'all 0.2s'
-                    }}
-                    onMouseOver={e => e.currentTarget.style.background = '#ffd77a'}
-                    onMouseOut={e => e.currentTarget.style.background = '#fece51'}
-                    onClick={() => setShowModal(true)}
-                  >
-                    <img src="/chat.png" alt="" style={{width: 22, height: 22, filter: 'brightness(0.7)'}} />
-                    Meet agent
-                  </button>
+                <div className="action-buttons" style={{display:'flex', gap:16, marginTop:24, flexWrap: 'wrap'}}>
+                  {/* Show save and meet agent buttons for customers who don't own the property */}
+                  {canMeetAgent && (
+                    <>
+                      <button
+                        onClick={handleSave}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          background: saved ? '#fece51' : '#fff',
+                          border: '1.5px solid #ddd', borderRadius: 8, padding: '12px 24px', fontWeight: 500, fontSize: 16, cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', transition: 'all 0.2s', height: 48
+                        }}
+                        onMouseOver={e => e.currentTarget.style.borderColor = '#fece51'}
+                        onMouseOut={e => e.currentTarget.style.borderColor = '#ddd'}
+                        onFocus={e => e.currentTarget.style.borderColor = '#fece51'}
+                        onBlur={e => e.currentTarget.style.borderColor = '#ddd'}
+                      >
+                        <img src="/save.png" alt="" style={{width: 22, height: 22}} />
+                        {saved ? "Saved" : "Save"}
+                      </button>
+                      <button
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          background: '#fece51', color: '#222', fontWeight: 600, border: 'none', borderRadius: 8, padding: '12px 24px', fontSize: 16, cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', height: 48, transition: 'all 0.2s'
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = '#ffd77a'}
+                        onMouseOut={e => e.currentTarget.style.background = '#fece51'}
+                        onFocus={e => e.currentTarget.style.background = '#ffd77a'}
+                        onBlur={e => e.currentTarget.style.background = '#fece51'}
+                        onClick={() => setShowModal(true)}
+                      >
+                        <img src="/chat.png" alt="Chat" style={{width: 22, height: 22, filter: 'brightness(0.7)'}} />
+                        Meet agent
+                      </button>
+                    </>
+                  )}
+                  
+                  {/* Show edit and delete buttons for property owners who are agents */}
+                  {canEditProperty && (
+                    <>
+                      <button
+                        onClick={handleEdit}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          background: '#4caf50', color: '#fff', fontWeight: 600, border: 'none', borderRadius: 8, padding: '12px 24px', fontSize: 16, cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', height: 48, transition: 'all 0.2s'
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = '#45a049'}
+                        onMouseOut={e => e.currentTarget.style.background = '#4caf50'}
+                        onFocus={e => e.currentTarget.style.background = '#45a049'}
+                        onBlur={e => e.currentTarget.style.background = '#4caf50'}
+                      >
+                        <span style={{fontSize: 18}}>✏️</span>
+                        Edit Property
+                      </button>
+                      <button
+                        onClick={handleDelete}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          background: '#f44336', color: '#fff', fontWeight: 600, border: 'none', borderRadius: 8, padding: '12px 24px', fontSize: 16, cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', height: 48, transition: 'all 0.2s'
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = '#da190b'}
+                        onMouseOut={e => e.currentTarget.style.background = '#f44336'}
+                        onFocus={e => e.currentTarget.style.background = '#da190b'}
+                        onBlur={e => e.currentTarget.style.background = '#f44336'}
+                      >
+                        <span style={{fontSize: 18}}>🗑️</span>
+                        Delete Property
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="user" style={{margin: 0, background: 'none'}}>
@@ -193,7 +258,7 @@ function SinglePage() {
           </div>
         </div>
       </div>
-      {showModal && (
+      {showModal && canMeetAgent && (
         <div className="modal-overlay" style={{position: 'fixed', top:0, left:0, width:'100vw', height:'100vh', background:'rgba(0,0,0,0.3)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000}}>
           <div className="modal-content" style={{background:'#fff', padding:'36px 32px', borderRadius:16, minWidth:340, maxWidth:420, boxShadow:'0 4px 32px rgba(0,0,0,0.13)', textAlign:'left'}}>
             <h2 style={{fontSize:'2rem', fontWeight:700, marginBottom:24, color:'#222'}}>Book an Appointment</h2>

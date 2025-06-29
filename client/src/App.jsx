@@ -3,6 +3,9 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { listPageLoader, profilePageLoader, singlePageLoader } from "./lib/loaders";
 
 import AboutPage from "./routes/aboutPage/aboutPage";
+import AgentsPage from "./routes/agentsPage/AgentsPage";
+import AppointmentsPage from "./routes/appointmentsPage/AppointmentsPage";
+import EditPostPage from "./routes/editPostPage/editPostPage";
 import HomePage from "./routes/homePage/homePage";
 import ListPage from "./routes/listPage/listPage";
 import Login from "./routes/login/login";
@@ -78,6 +81,10 @@ function App() {
         {
           path: "/add",
           element: <NewPostPage />,
+        },
+        {
+          path: "/edit-post/:id",
+          element: <EditPostPage />,
         },
       ],
     },
